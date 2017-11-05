@@ -1,0 +1,13 @@
+[[source]]
+
+url = "https://github.com/beasley-weather/weewx-orm"
+verify_ssl = true
+name = "weewx-orm"
+
+
+[packages]
+
+sqlalchemy = "*"
+
+
+[dev-packages]
