@@ -1,3 +1,5 @@
+from traceback import print_exc
+
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import sessionmaker
 
@@ -17,6 +19,23 @@ class WeewxDB:
         self.session = Session(sessionmaker(bind=self._engine))
 
         self.tables = self._Base.classes
+
+    def archive_query_interval(self, _from, to):
+        '''
+        :param _from: Start of interval (int)
+        :param to: End of interval (int)
+        '''
+        with self.session as session:
+            table = self.tables.archive
+
+            try:
+                return session.query(table)\
+                    .filter(table.dateTime >= _from)\
+                    .filter(table.dateTime < to)\
+                    .all()
+            except Exception as e:
+                print_exc()
+                session.rollback()
 
 
 class Session:
