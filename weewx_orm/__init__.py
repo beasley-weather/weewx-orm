@@ -1,8 +1,10 @@
 from traceback import print_exc
 
+import msgpack
+
+from marshmallow_sqlalchemy import ModelSchema
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import sessionmaker
-
 from sqlalchemy import create_engine
 
 
@@ -20,6 +22,12 @@ class WeewxDB:
 
         self.tables = self._Base.classes
 
+        class ArchiveSchema(ModelSchema):
+            class Meta:
+                model = self.tables.archive
+
+        self.archive_schema = ArchiveSchema()
+
     def archive_query_interval(self, _from, to):
         '''
         :param _from: Start of interval (int)
@@ -29,10 +37,33 @@ class WeewxDB:
             table = self.tables.archive
 
             try:
-                return session.query(table)\
+                results = session.query(table)\
                     .filter(table.dateTime >= _from)\
                     .filter(table.dateTime < to)\
                     .all()
+
+                dump = [self.archive_schema.dump(entry).data
+                        for entry in results]
+                #  print(dump)
+                return msgpack.packb(dump)
+            except Exception as e:
+                print_exc()
+                session.rollback()
+
+    def archive_insert_data(self, data_bin):
+        '''
+        :param data: Archive table data
+        :type data: list[archive]
+        '''
+        data_dump = msgpack.unpackb(data_bin, encoding='utf-8')
+        with self.session as session:
+            try:
+                data = [self.tables.archive(**entry) for entry in data_dump]
+
+                print()
+                print(data)
+                #  session.add_all(data)
+                #  session.commit()
             except Exception as e:
                 print_exc()
                 session.rollback()

@@ -5,5 +5,9 @@ setup(
     name='weewx-orm',
     packages=['weewx_orm'],
     include_package_data=True,
-    install_requires=['sqlalchemy']
+    install_requires=[
+        'marshmallow-sqlalchemy',
+        'msgpack'
+        'sqlalchemy',
+    ]
 )

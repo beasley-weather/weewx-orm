@@ -8,6 +8,8 @@ name = "weewx-orm"
 [packages]
 
 sqlalchemy = "*"
+marshmallow-sqlalchemy = "*"
+msgpack-python = "*"
 
 
 [dev-packages]
