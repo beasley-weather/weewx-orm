@@ -30,8 +30,8 @@ class WeewxDB:
 
     def archive_query_interval(self, _from, to):
         '''
-        :param _from: Start of interval (int)
-        :param to: End of interval (int)
+        :param _from: Start of interval (int) (inclusive)
+        :param to: End of interval (int) (exclusive)
         '''
         with self.session as session:
             table = self.tables.archive
