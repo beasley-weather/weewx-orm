@@ -1,7 +1,7 @@
 from traceback import print_exc
 
 import msgpack
-
+from sqlalchemy_utils import database_exists
 from marshmallow_sqlalchemy import ModelSchema
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import sessionmaker
@@ -9,6 +9,8 @@ from sqlalchemy import create_engine
 
 
 class WeewxDB:
+    _ARCHIVE_SCHEMA_FILENAME = 'archive_schema.sql'
+
     def __init__(self, database_file):
         '''
         :param database_file: Path to the sqlite database
@@ -16,6 +18,10 @@ class WeewxDB:
         self._database_file = 'sqlite:///' + database_file
 
         self._engine = create_engine(self._database_file)
+
+        if not database_exists(self._database_file):
+            self._init_database(self._database_file)
+
         self._Base = automap_base()
         self._Base.prepare(self._engine, reflect=True)
         self.session = Session(sessionmaker(bind=self._engine))
@@ -44,7 +50,6 @@ class WeewxDB:
 
                 dump = [self.archive_schema.dump(entry).data
                         for entry in results]
-                #  print(dump)
                 return msgpack.packb(dump)
             except Exception as e:
                 print_exc()
@@ -60,13 +65,25 @@ class WeewxDB:
             try:
                 data = [self.tables.archive(**entry) for entry in data_dump]
 
-                print()
-                print(data)
-                #  session.add_all(data)
-                #  session.commit()
+                session.add_all(data)
+                session.commit()
             except Exception as e:
                 print_exc()
                 session.rollback()
+
+    def _init_database(self, database_uri):
+        with self._engine.connect() as con:
+            sql = open(WeewxDB._ARCHIVE_SCHEMA_FILENAME).read()
+            con.execute(sql)
+
+    def _database_exists(self, database_uri):
+        db = sqlalchemy.create_engine(database_uri)
+        try:
+            _ = db.connect()
+            _.close()
+            return True
+        except sqlalchemy.exc.OperationalError:
+            return False
 
 
 class Session:

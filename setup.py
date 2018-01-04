@@ -7,7 +7,8 @@ setup(
     include_package_data=True,
     install_requires=[
         'marshmallow-sqlalchemy',
-        'msgpack',
+        'msgpack-python',
         'sqlalchemy',
+        'sqlalchemy-utils',
     ]
 )

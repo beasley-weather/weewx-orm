@@ -5,9 +5,17 @@ verify_ssl = true
 name = "weewx-orm"
 
 
+[[source]]
+
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+
 [packages]
 
 sqlalchemy = "*"
+sqlalchemy-utils = "*"
 marshmallow-sqlalchemy = "*"
 msgpack-python = "*"
 
