@@ -50,7 +50,8 @@ class WeewxDB:
 
                 dump = [self.archive_schema.dump(entry).data
                         for entry in results]
-                return msgpack.packb(dump)
+                # If query returns no data, return None
+                return None if not dump else msgpack.packb(dump)
             except Exception as e:
                 print_exc()
                 session.rollback()
