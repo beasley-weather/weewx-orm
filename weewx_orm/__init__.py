@@ -7,10 +7,10 @@ from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 
+from .archive_schema import schema as archive_schema_sql
+
 
 class WeewxDB:
-    _ARCHIVE_SCHEMA_FILENAME = 'archive_schema.sql'
-
     def __init__(self, database_file):
         '''
         :param database_file: Path to the sqlite database
@@ -74,8 +74,7 @@ class WeewxDB:
 
     def _init_database(self, database_uri):
         with self._engine.connect() as con:
-            sql = open(WeewxDB._ARCHIVE_SCHEMA_FILENAME).read()
-            con.execute(sql)
+            con.execute(archive_schema_sql)
 
     def _database_exists(self, database_uri):
         db = sqlalchemy.create_engine(database_uri)
