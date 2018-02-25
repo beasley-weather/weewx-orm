@@ -1,11 +1,10 @@
 from traceback import print_exc
 
-import msgpack
-from sqlalchemy_utils import database_exists
 from marshmallow_sqlalchemy import ModelSchema
+from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
+from sqlalchemy_utils import database_exists
 
 from .archive_schema import schema as archive_schema_sql
 
@@ -20,7 +19,7 @@ class WeewxDB:
         self._engine = create_engine(self._database_file)
 
         if not database_exists(self._database_file):
-            self._init_database(self._database_file)
+            self._init_database()
 
         self._Base = automap_base()
         self._Base.prepare(self._engine, reflect=True)
@@ -48,20 +47,16 @@ class WeewxDB:
                     .filter(table.dateTime < to)\
                     .all()
 
-                dump = [self.archive_schema.dump(entry).data
-                        for entry in results]
-                # If query returns no data, return None
-                return None if not dump else msgpack.packb(dump)
+                return [self.archive_schema.dump(entry).data for entry in results]
             except Exception as e:
                 print_exc()
                 session.rollback()
 
-    def archive_insert_data(self, data_bin):
+    def archive_insert_data(self, data_dump):
         '''
         :param data: Archive table data
         :type data: list[archive]
         '''
-        data_dump = msgpack.unpackb(data_bin, encoding='utf-8')
         with self.session as session:
             try:
                 data = [self.tables.archive(**entry) for entry in data_dump]
@@ -72,18 +67,9 @@ class WeewxDB:
                 print_exc()
                 session.rollback()
 
-    def _init_database(self, database_uri):
+    def _init_database(self):
         with self._engine.connect() as con:
             con.execute(archive_schema_sql)
-
-    def _database_exists(self, database_uri):
-        db = sqlalchemy.create_engine(database_uri)
-        try:
-            _ = db.connect()
-            _.close()
-            return True
-        except sqlalchemy.exc.OperationalError:
-            return False
 
 
 class Session:

@@ -1,4 +1,3 @@
-from textwrap import dedent
 
 schema = '''
     CREATE TABLE archive (
