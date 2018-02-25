@@ -83,3 +83,6 @@ class TestWewxDB(unittest.TestCase):
             results = session.query(self.wdb.tables.archive).all()
 
         self.assertEqual(len(results), 3)
+        self.assertEqual(results[0].dateTime, 1000)
+        self.assertEqual(results[1].dateTime, 1010)
+        self.assertEqual(results[2].dateTime, 1020)
