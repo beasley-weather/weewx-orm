@@ -2,6 +2,7 @@ from traceback import print_exc
 
 from marshmallow_sqlalchemy import ModelSchema
 from sqlalchemy import create_engine
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy_utils import database_exists
@@ -37,6 +38,7 @@ class WeewxDB:
         '''
         :param _from: Start of interval (int) (inclusive)
         :param to: End of interval (int) (exclusive)
+        :raises: IOError
         '''
         with self.session as session:
             table = self.tables.archive
@@ -48,14 +50,16 @@ class WeewxDB:
                     .all()
 
                 return [self.archive_schema.dump(entry).data for entry in results]
-            except Exception as e:
-                print_exc()
+            except SQLAlchemyError as exc:
                 session.rollback()
+                print_exc()
+                raise IOError(exc)
 
     def archive_insert_data(self, data_dump):
         '''
         :param data: Archive table data
         :type data: list[archive]
+        :raises: IOError
         '''
         with self.session as session:
             try:
@@ -63,9 +67,10 @@ class WeewxDB:
 
                 session.add_all(data)
                 session.commit()
-            except Exception as e:
-                print_exc()
+            except SQLAlchemyError as exc:
                 session.rollback()
+                print_exc()
+                raise IOError(exc)
 
     def _init_database(self):
         with self._engine.connect() as con:
